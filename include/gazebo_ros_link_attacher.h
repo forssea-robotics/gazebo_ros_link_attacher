@@ -62,7 +62,7 @@ namespace gazebo
         bool getJoint(std::string model1, std::string link1, std::string model2, std::string link2, fixedJoint &joint);
 
    private:
-        ros::NodeHandle nh_;
+        boost::shared_ptr<ros::NodeHandle> nh_;
         ros::ServiceServer attach_service_;
         ros::ServiceServer detach_service_;
 

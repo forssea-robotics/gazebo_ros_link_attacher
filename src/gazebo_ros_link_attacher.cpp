@@ -11,8 +11,7 @@ namespace gazebo
   GZ_REGISTER_WORLD_PLUGIN(GazeboRosLinkAttacher)
 
   // Constructor
-  GazeboRosLinkAttacher::GazeboRosLinkAttacher() :
-    nh_("link_attacher_node")
+  GazeboRosLinkAttacher::GazeboRosLinkAttacher()
   {
   }
 
@@ -22,7 +21,7 @@ namespace gazebo
   {
   }
 
-  void GazeboRosLinkAttacher::Load(physics::WorldPtr _world, sdf::ElementPtr /*_sdf*/)
+  void GazeboRosLinkAttacher::Load(physics::WorldPtr _world, sdf::ElementPtr _sdf)
   {
     // Make sure the ROS node for Gazebo has already been initialized                                                                                    
     if (!ros::isInitialized())
@@ -32,12 +31,14 @@ namespace gazebo
       return;
     }
     
+    this->nh_.reset(new ros::NodeHandle(_sdf->GetAttribute("name")->GetAsString()));
+
     this->world = _world;
     this->physics = this->world->GetPhysicsEngine();
-    this->attach_service_ = this->nh_.advertiseService("attach", &GazeboRosLinkAttacher::attach_callback, this);
-    ROS_INFO_STREAM("Attach service at: " << this->nh_.resolveName("attach"));
-    this->detach_service_ = this->nh_.advertiseService("detach", &GazeboRosLinkAttacher::detach_callback, this);
-    ROS_INFO_STREAM("Detach service at: " << this->nh_.resolveName("detach"));
+    this->attach_service_ = this->nh_->advertiseService("attach", &GazeboRosLinkAttacher::attach_callback, this);
+    ROS_INFO_STREAM("Attach service at: " << this->nh_->resolveName("attach"));
+    this->detach_service_ = this->nh_->advertiseService("detach", &GazeboRosLinkAttacher::detach_callback, this);
+    ROS_INFO_STREAM("Detach service at: " << this->nh_->resolveName("detach"));
     ROS_INFO("Link attacher node initialized.");
   }
 
@@ -62,28 +63,25 @@ namespace gazebo
     j.link1 = link1;
     j.model2 = model2;
     j.link2 = link2;
-    ROS_DEBUG_STREAM("Getting BasePtr of " << model1);
-    physics::BasePtr b1 = this->world->GetByName(model1);
-    if (b1 == NULL){
+    ROS_DEBUG_STREAM("Getting ModelPtr of " << model1);
+    physics::ModelPtr m1 = this->world->GetModel(model1);
+    if (!m1){
       ROS_ERROR_STREAM(model1 << " model was not found");
       return false;
     }
-    ROS_DEBUG_STREAM("Getting BasePtr of " << model2);
-    physics::BasePtr b2 = this->world->GetByName(model2);
-    if (b2 == NULL){
+    ROS_DEBUG_STREAM("Getting ModelPtr of " << model2);
+    physics::ModelPtr m2 = this->world->GetModel(model2);
+    if (!m2){
       ROS_ERROR_STREAM(model2 << " model was not found");
       return false;
     }
 
-    ROS_DEBUG_STREAM("Casting into ModelPtr");
-    physics::ModelPtr m1(dynamic_cast<physics::Model*>(b1.get()));
     j.m1 = m1;
-    physics::ModelPtr m2(dynamic_cast<physics::Model*>(b2.get()));
     j.m2 = m2;
 
     ROS_DEBUG_STREAM("Getting link: '" << link1 << "' from model: '" << model1 << "'");
     physics::LinkPtr l1 = m1->GetLink(link1);
-    if (l1 == NULL){
+    if (!l1){
       ROS_ERROR_STREAM(link1 << " link was not found");
       return false;
     }
@@ -95,7 +93,7 @@ namespace gazebo
     j.l1 = l1;
     ROS_DEBUG_STREAM("Getting link: '" << link2 << "' from model: '" << model2 << "'");
     physics::LinkPtr l2 = m2->GetLink(link2);
-    if (l2 == NULL){
+    if (!l2){
       ROS_ERROR_STREAM(link2 << " link was not found");
       return false;
     }
@@ -159,12 +157,10 @@ namespace gazebo
   bool GazeboRosLinkAttacher::getJoint(std::string model1, std::string link1,
                                        std::string model2, std::string link2,
                                        fixedJoint &joint){
-    fixedJoint j;
     for(std::vector<fixedJoint>::iterator it = this->joints.begin(); it != this->joints.end(); ++it){
-        j = *it;
-        if ((j.model1.compare(model1) == 0) && (j.model2.compare(model2) == 0)
-                && (j.link1.compare(link1) == 0) && (j.link2.compare(link2) == 0)){
-            joint = j;
+        if ((it->model1 == model1) && (it->model2 == model2)
+                && (it->link1 == link1) && (it->link2 == link2)){
+            joint = *it;
             return true;
         }
     }
