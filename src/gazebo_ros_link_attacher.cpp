@@ -69,8 +69,13 @@ bool GazeboRosLinkAttacher::AttachLinks(const gazebo_ros_link_attacher::AttachRe
 
     if (joint)
     {
+#if (GAZEBO_MAJOR_VERSION >= 8)
+      joint->SetLowerLimit(0, 0);
+      joint->SetUpperLimit(0, 0);
+#else
       joint->SetLowStop(0, 0);
       joint->SetHighStop(0, 0);
+#endif
       return true;
     }
   }
@@ -79,7 +84,11 @@ bool GazeboRosLinkAttacher::AttachLinks(const gazebo_ros_link_attacher::AttachRe
 
 bool GazeboRosLinkAttacher::DetachLinks(const gazebo_ros_link_attacher::AttachRequest &_request)
 {
+#if (GAZEBO_MAJOR_VERSION >= 8)
+  const physics::ModelPtr model = this->world->ModelByName(_request.model_name_1);
+#else
   const physics::ModelPtr model = this->world->GetModel(_request.model_name_1);
+#endif
   if (model)
   {
     if (model->RemoveJoint(MakeJointName(_request)))
@@ -97,8 +106,11 @@ bool GazeboRosLinkAttacher::DetachLinks(const gazebo_ros_link_attacher::AttachRe
 physics::LinkPtr GazeboRosLinkAttacher::FindLink(const std::string &_modelName, const std::string &_linkName)
 {
   physics::LinkPtr link;
-
+#if (GAZEBO_MAJOR_VERSION >= 8)
+  const physics::ModelPtr model = this->world->ModelByName(_modelName);
+#else
   const physics::ModelPtr model = this->world->GetModel(_modelName);
+#endif
   if (model)
   {
     link = model->GetLink(_linkName);
