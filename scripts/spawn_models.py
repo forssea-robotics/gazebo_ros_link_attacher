@@ -117,7 +117,7 @@ if __name__ == '__main__':
                               0.0, 0.0, 0.0,  # rotation
                               1.0, 1.0, 1.0)  # size
     spawn_srv.call(req1)
-    rospy.sleep(1.0)
+    rospy.sleep(0.1)
 
     # Spawn object 2
     rospy.loginfo("Spawning cube2")
@@ -126,7 +126,7 @@ if __name__ == '__main__':
                               0.0, 0.0, 0.0,  # rotation
                               0.8, 0.8, 0.8)  # size
     spawn_srv.call(req2)
-    rospy.sleep(1.0)
+    rospy.sleep(0.1)
 
     # Spawn object 3
     rospy.loginfo("Spawning cube3")
@@ -135,4 +135,4 @@ if __name__ == '__main__':
                               0.0, 0.0, 0.0,  # rotation
                               0.4, 0.4, 0.4)  # size
     spawn_srv.call(req3)
-    rospy.sleep(1.0)
+    rospy.sleep(0.1)
