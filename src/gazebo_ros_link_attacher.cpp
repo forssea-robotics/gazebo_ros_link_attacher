@@ -45,27 +45,27 @@ bool GazeboRosLinkAttacher::AttachLinks(const gazebo_ros_link_attacher::AttachRe
     ROS_DEBUG_STREAM("Moving <" << _request.model_name_2 << "> towards <" << _request.model_name_1 << ">");
 #if (GAZEBO_MAJOR_VERSION >= 8)
     ignition::math::Pose3d new_pos((link_1->WorldPose().Pos()) + link_1->WorldPose().Rot().RotateVector(
-                                     ignition::math::Vector3d(_request.pos.x, _request.pos.y, _request.pos.z)),
+                                     ignition::math::Vector3d(_request.pos.x, _request.pos.y, _request.pos.z) - link_2->RelativePose().Pos()),
                                    link_1->WorldPose().Rot() * link_2->WorldPose().Rot());
-    link_2->SetWorldPose(new_pos);
+    link_2->GetModel()->SetInitialRelativePose(new_pos);
+    link_2->GetModel()->Reset();
+    link_2->SetWorldTwist(link_1->RelativeLinearVel(), link_1->RelativeAngularVel(), true);
 #else
     math::Pose3d new_pos((link_1->GetWorldPose().pos) + link_1->GetWorldPose().rot.RotateVector(
                            math::Vector3d(_request.pos.x, _request.pos.y, _request.pos.z)),
                          link_1->GetWorldPose().rot * link_2->GetWorldPose().rot);
-    link_2->SetWorldPose(new_pos);
+    link_2->GetModel()->SetInitialRelativePose(new_pos);
+    link_2->GetModel()->Reset();
+    link_2->SetWorldTwist(link_1->GetRelativeLinearVel(), link_1->GetRelativeAngularVel(), true);
 #endif
     ROS_DEBUG_STREAM("Creating joint on model <" << _request.model_name_1 << ">");
     const physics::JointPtr joint = link_1->GetModel()->CreateJoint(
-                                      MakeJointName(_request), "revolute", link_1, link_2);
+                                      MakeJointName(_request), "ball", link_1, link_2);
 
     if (joint) {
 #if (GAZEBO_MAJOR_VERSION >= 8)
-      joint->SetLowerLimit(0, 0);
-      joint->SetUpperLimit(0, 0);
       joint->Init();
 #else
-      joint->SetLowStop(0, 0);
-      joint->SetHighStop(0, 0);
       joint->Init();
 #endif
       return true;
