@@ -51,8 +51,8 @@ bool GazeboRosLinkAttacher::AttachLinks(const gazebo_ros_link_attacher::AttachRe
     link_2->GetModel()->Reset();
     link_2->SetWorldTwist(link_1->RelativeLinearVel(), link_1->RelativeAngularVel(), true);
 #else
-    math::Pose3d new_pos((link_1->GetWorldPose().pos) + link_1->GetWorldPose().rot.RotateVector(
-                           math::Vector3d(_request.pos.x, _request.pos.y, _request.pos.z)),
+    math::Pose new_pos((link_1->GetWorldPose().pos) + link_1->GetWorldPose().rot.RotateVector(
+                           math::Vector3(_request.pos.x, _request.pos.y, _request.pos.z)),
                          link_1->GetWorldPose().rot * link_2->GetWorldPose().rot);
     link_2->GetModel()->SetInitialRelativePose(new_pos);
     link_2->GetModel()->Reset();
